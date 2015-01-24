@@ -209,17 +209,16 @@ public class Robot extends SampleRobot {
             //lift_system.set(0.5);
             
             // lifts fork lift up
-            if (b1.get() == true) {
+            if (b1.get() == true && b2.get() == false) {
             	lift_system.set(0.5);
             	lift_system2.set(-0.5);
             }
             // brings fork lift down
-            if (b2. get() == true) {
+            else if (b2. get() == true && b1.get() == false) {
             	lift_system. set(-0.5);
             	lift_system2. set(0.5);
-            }
-            
-            if (b2.get() == b1.get() == false) {
+            }else
+            {
             	lift_system. set(0);
             	lift_system2. set(0);
             }
