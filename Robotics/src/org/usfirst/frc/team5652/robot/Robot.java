@@ -57,7 +57,19 @@ public class Robot extends SampleRobot {
     public void autonomous() {
         myRobot.setSafetyEnabled(false);
         myRobot.drive(-0.5, 0.0);	// drive forwards half speed
-        Timer.delay(2.0);		//    for 2 seconds
+        Timer.delay(2.0);			// for 2 seconds
+        
+        lift_system.set(1);
+        lift_system2.set(-1);		// fork lift up
+        Timer.delay(1.0);			// lifts for 1 second
+        
+        myRobot.drive(-0.5, 0.0);	// drive forwards half speed
+        Timer.delay(5.0);			// for 5 seconds
+        
+        lift_system.set(-0.40);		
+        lift_system2.set(0.40);		// fork lift down
+        Timer.delay(1.0);			// for 1 second
+        
         myRobot.drive(0.0, 0.0);	// stop robot
     }
 
@@ -72,13 +84,13 @@ public class Robot extends SampleRobot {
             
             // lifts fork lift up
             if (b1.get() == true && b2.get() == false) {
-            	lift_system.set(0.5);
-            	lift_system2.set(-0.5);
+            	lift_system.set(1);
+            	lift_system2.set(-1);
             }
             // brings fork lift down
             else if (b2. get() == true && b1.get() == false) {
-            	lift_system. set(-0.5);
-            	lift_system2. set(0.5);
+            	lift_system. set(-0.40);
+            	lift_system2. set(0.40);
             }else
             {
             	lift_system. set(0);
