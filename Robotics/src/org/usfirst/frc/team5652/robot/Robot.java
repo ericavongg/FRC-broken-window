@@ -36,6 +36,9 @@ public class Robot extends SampleRobot {
     Solenoid pneumatic_solenoid;
     Button b1, b2, b3;
     
+     double lift_power_down = 0.35;
+     double lift_power_up = 1;
+     Integer loop_count = 0;
 
     public Robot() {
     	// We have 2 motors per wheel 
@@ -50,27 +53,44 @@ public class Robot extends SampleRobot {
         b2 = new JoystickButton(stick, 2);
         b3 = new JoystickButton(stick, 3);
     }
+   
 
     /**
      * Drive left & right motors for 2 seconds then stop
      */
     public void autonomous() {
         myRobot.setSafetyEnabled(false);
-        myRobot.drive(-0.5, 0.0);	// drive forwards half speed
-        Timer.delay(2.0);			// for 2 seconds
+        myRobot.drive(-0.5, 0.0);	// drive forwards at 5%
+        Timer.delay(1.5);			// for 1.5 seconds
+        myRobot.drive(-0.05, 0.0);  // slows down to 5% to pick up box
+        Timer.delay(0.5);			// for .5 seconds 
         
-        lift_system.set(1);
-        lift_system2.set(-1);		// fork lift up
-        Timer.delay(1.0);			// lifts for 1 second
+        forklift_up();
+        Timer.delay(.3);
+        forklift_stop();
         
         myRobot.drive(-0.5, 0.0);	// drive forwards half speed
         Timer.delay(5.0);			// for 5 seconds
         
-        lift_system.set(-0.40);		
-        lift_system2.set(0.40);		// fork lift down
-        Timer.delay(1.0);			// for 1 second
+        myRobot.drive(0.0, 0.0);    // stop
+        
+        forklift_down();
+        Timer.delay(.3);
+        forklift_stop();
         
         myRobot.drive(0.0, 0.0);	// stop robot
+    }
+    public void forklift_up() {
+    	lift_system.set (lift_power_up);
+    	lift_system2.set(-1*lift_power_up);
+    }
+    public void forklift_down() {
+    	lift_system.set(-1*lift_power_down);
+    	lift_system2.set(lift_power_down);
+    }
+    public void forklift_stop() {
+    	lift_system.set(0);
+    	lift_system2.set(0);
     }
 
     /**
@@ -84,17 +104,14 @@ public class Robot extends SampleRobot {
             
             // lifts fork lift up
             if (b1.get() == true && b2.get() == false) {
-            	lift_system.set(1);
-            	lift_system2.set(-1);
+            	forklift_up();
             }
             // brings fork lift down
             else if (b2. get() == true && b1.get() == false) {
-            	lift_system. set(-0.40);
-            	lift_system2. set(0.40);
+            	forklift_up();
             }else
             {
-            	lift_system. set(0);
-            	lift_system2. set(0);
+            	forklift_stop();
             }
             Timer.delay(0.005);		// wait for a motor update time
             
