@@ -139,7 +139,9 @@ public class Robot extends SampleRobot {
         myRobot.setSafetyEnabled(true);
         while (isOperatorControl() && isEnabled()) {
         	profiler_start = System.currentTimeMillis();
-        	myRobot.arcadeDrive(stick); // drive with arcade style (use right stick)
+        	// Reverse the rotate rate
+        	myRobot.arcadeDrive(stick.getAxis(Joystick.AxisType.kY), -1 * stick.getAxis(Joystick.AxisType.kX));
+        	//myRobot.arcadeDrive(stick); // drive with arcade style (use right stick)
             //lift_system.set(0.5);
             
             // lifts fork lift up
