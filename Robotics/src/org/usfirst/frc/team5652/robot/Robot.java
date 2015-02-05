@@ -44,7 +44,8 @@ public class Robot extends SampleRobot {
     Button b1, b2, b3, b4, b6;
     
     double lift_power_down = 0.35;
-    double lift_power_up = 1;
+    double lift_power_up = 0.75;
+    double lift_power_stop = 0.05;
     Integer loop_count = 0;
     
     long profiler_start = System.currentTimeMillis();
@@ -118,12 +119,12 @@ public class Robot extends SampleRobot {
     	lift_system2.set(-1*lift_power_up);
     }
     public void forklift_down() {
-    	lift_system.set(-1*lift_power_down);
-    	lift_system2.set(lift_power_down);
+    	lift_system.set(  -1 * lift_power_down);
+    	lift_system2.set( 1 * lift_power_down);
     }
     public void forklift_stop() {
-    	lift_system.set(0);
-    	lift_system2.set(0);
+    	lift_system.set(lift_power_stop);
+    	lift_system2.set(lift_power_stop);
     }
     public void close_arm() {
     	 pneumatic_solenoid.set(true);
@@ -150,7 +151,7 @@ public class Robot extends SampleRobot {
             }
             // brings fork lift down
             else if (b2.get() == true && b1.get() == false) {
-            	forklift_up();
+            	forklift_down();
             }else
             {
             	forklift_stop();
@@ -170,7 +171,7 @@ public class Robot extends SampleRobot {
             
             // 1/0.005 s = 5 ms
             // 200 * 0.005 = 1000 = 1 sec
-            if ((loop_count++ % 200) == 0) {
+            if ((loop_count++ % 30) == 0) {
             	
             	//Profiler code
             	profiler_end = System.currentTimeMillis();
