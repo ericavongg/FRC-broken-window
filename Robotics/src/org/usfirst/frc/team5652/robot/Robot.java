@@ -34,7 +34,7 @@ import org.usfirst.frc.team5652.robot.*;
 public class Robot extends SampleRobot {
 	RobotDrive myRobot;
 	Joystick stick;
-	Victor lift_system, lift_system2;
+	Victor motor_5, motor_6,motor_7;
 	Solenoid pneumatic_solenoid;
 	Button b1, b2, b3, b4, b6;
 
@@ -55,8 +55,9 @@ public class Robot extends SampleRobot {
 
 		myRobot.setExpiration(0.1);
 		stick = new Joystick(0);
-		lift_system = new Victor(2);
-		lift_system2 = new Victor(3);
+		motor_5 = new Victor(2);
+		motor_6 = new Victor(3);
+		motor_7 = new Victor(4);
 		pneumatic_solenoid = new Solenoid(0);
 
 		// Joystick init
@@ -96,18 +97,21 @@ public class Robot extends SampleRobot {
 	}
 
 	public void forklift_up() {
-		lift_system.set(  		lift_power_up);
-		lift_system2.set(-1 * 	lift_power_up);
+		motor_5.set(  		lift_power_up);
+		motor_6.set(-1 * 	lift_power_up);
+		motor_7.set(  		lift_power_up);
 	}
 
 	public void forklift_down() {
-		lift_system.set( -1 * 	lift_power_down);
-		lift_system2.set(	 	lift_power_down);
+		motor_5.set( -1 * 	lift_power_down);
+		motor_6.set(	 	lift_power_down);
+		motor_7.set( -1 * 	lift_power_down);
 	}
 
 	public void forklift_stop() {
-		lift_system.set(	lift_power_stop);
-		lift_system2.set(	lift_power_stop);
+		motor_5.set(	lift_power_stop);
+		motor_6.set(	lift_power_stop);
+		motor_7.set(	lift_power_stop);
 	}
 
 	public void close_arm() {
@@ -125,13 +129,7 @@ public class Robot extends SampleRobot {
 		myRobot.setSafetyEnabled(true);
 		while (isOperatorControl() && isEnabled()) {
 			profiler_start = System.currentTimeMillis();
-			// Reverse the rotate rate
-			//myRobot.arcadeDrive(stick.getAxis(Joystick.AxisType.kY),
-			//		-1 * stick.getAxis(Joystick.AxisType.kX));
 			myRobot.arcadeDrive(stick.getY(), -1 * stick.getX());
-			// myRobot.arcadeDrive(stick); // drive with arcade style (use right
-			// stick)
-			// lift_system.set(0.5);
 
 			// lifts fork lift up
 			if (b1.get() == true && b2.get() == false) {
@@ -160,6 +158,7 @@ public class Robot extends SampleRobot {
 				profiler_end = System.currentTimeMillis();
 				SmartDashboard.putNumber("profiler_drive", profiler_end
 						- profiler_start);
+				SmartDashboard.putString("ERROR", "NONE");
 				profiler_start = System.currentTimeMillis();
 				// Vision
 
