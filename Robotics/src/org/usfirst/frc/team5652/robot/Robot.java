@@ -42,7 +42,7 @@ public class Robot extends SampleRobot {
 	Solenoid pneumatic_solenoid;
 	Button b1, b2, b3, b4, b6;
 
-	double lift_power_down = 0.35;
+	double lift_power_down = 0.45;
 	double lift_power_up = 1.0;
 	double lift_power_stop = 0.00;
 	Integer loop_count = 0;
@@ -144,8 +144,9 @@ public class Robot extends SampleRobot {
 		while (isOperatorControl() && isEnabled()) {
 			profiler_start = System.currentTimeMillis();
 			// Reverse the rotate rate
-			myRobot.arcadeDrive(stick.getAxis(Joystick.AxisType.kY),
-					-1 * stick.getAxis(Joystick.AxisType.kX));
+			//myRobot.arcadeDrive(stick.getAxis(Joystick.AxisType.kY),
+			//		-1 * stick.getAxis(Joystick.AxisType.kX));
+			myRobot.arcadeDrive(stick.getY(), -1 * stick.getX());
 			// myRobot.arcadeDrive(stick); // drive with arcade style (use right
 			// stick)
 			// lift_system.set(0.5);
