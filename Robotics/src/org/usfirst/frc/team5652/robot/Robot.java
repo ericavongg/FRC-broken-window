@@ -1,12 +1,7 @@
 package org.usfirst.frc.team5652.robot;
 
 import com.ni.vision.NIVision;
-import com.ni.vision.NIVision.ColorInformation;
-import com.ni.vision.NIVision.DrawMode;
 import com.ni.vision.NIVision.Image;
-import com.ni.vision.NIVision.ROI;
-import com.ni.vision.NIVision.ShapeMode;
-
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -17,6 +12,7 @@ import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.buttons.Button;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.usfirst.frc.team5652.robot.*;
 
 /**
  * This is a demo program showing the use of the RobotDrive class. The
@@ -49,11 +45,9 @@ public class Robot extends SampleRobot {
 
 	long profiler_start = System.currentTimeMillis();
 	long profiler_end = System.currentTimeMillis();
-
-	// Vision
-	int session;
-	Image frame;
-	CameraServer server;
+		
+	Vision vision = new Vision();
+    
 
 	public Robot() {
 		// We have 2 motors per wheel
@@ -72,19 +66,7 @@ public class Robot extends SampleRobot {
 		b4 = new JoystickButton(stick, 4); // pneumatic
 		b6 = new JoystickButton(stick, 6);
 
-		// Vision init
-		frame = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
-
-		// the camera name (ex "cam0") can be found through the roborio web
-		// interface
-		session = NIVision.IMAQdxOpenCamera("cam0",
-				NIVision.IMAQdxCameraControlMode.CameraControlModeController);
-		NIVision.IMAQdxConfigureGrab(session);
-
-		NIVision.IMAQdxStartAcquisition(session);
-
-		server = CameraServer.getInstance();
-		server.setQuality(50);
+		
 	}
 
 	/**
@@ -181,40 +163,7 @@ public class Robot extends SampleRobot {
 				profiler_start = System.currentTimeMillis();
 				// Vision
 
-				new Thread(new Runnable() {
-
-					@Override
-					public void run() {
-						long profile_vision = System.currentTimeMillis();
-
-						/**
-						 * grab an image, draw the circle, and provide it for
-						 * the camera server which will in turn send it to the
-						 * dashboard.
-						 */
-						NIVision.Rect rect = new NIVision.Rect(10, 10, 100, 100);
-
-						// Grab a frame from the webcam
-						NIVision.IMAQdxGrab(session, frame, 1);
-
-						// Draw a oval within a frame
-						NIVision.imaqDrawShapeOnImage(frame, frame, rect,
-								DrawMode.DRAW_VALUE, ShapeMode.SHAPE_OVAL, 0.0f);
-
-						// Draw a rect within a frame
-						NIVision.imaqDrawShapeOnImage(frame, frame, rect,
-								DrawMode.DRAW_INVERT, ShapeMode.SHAPE_RECT,
-								0.0f);
-
-						// Send it to the driver station
-						CameraServer.getInstance().setImage(frame);
-
-						// Profiling the time it takes to process the image.
-						SmartDashboard.putNumber("profiler_vision",
-								System.currentTimeMillis() - profile_vision);
-
-					}
-				}).start();
+				new Thread(vision).start();
 
 				profiler_end = System.currentTimeMillis();
 				SmartDashboard.putNumber("profiler_vision_thread", profiler_end
@@ -224,7 +173,6 @@ public class Robot extends SampleRobot {
 			Timer.delay(0.005); // wait for a motor update time
 		}
 
-		NIVision.IMAQdxStopAcquisition(session);
 	}
 
 	/**
