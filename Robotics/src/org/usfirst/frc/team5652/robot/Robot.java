@@ -1,8 +1,7 @@
 package org.usfirst.frc.team5652.robot;
 
-import com.ni.vision.NIVision;
-import com.ni.vision.NIVision.Image;
-import edu.wpi.first.wpilibj.CameraServer;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SampleRobot;
@@ -12,7 +11,6 @@ import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.buttons.Button;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import org.usfirst.frc.team5652.robot.*;
 
 /**
  * This is a demo program showing the use of the RobotDrive class. The
@@ -36,8 +34,11 @@ public class Robot extends SampleRobot {
 	Joystick stick;
 	Victor motor_5, motor_6,motor_7;
 	Solenoid pneumatic_solenoid;
-	Button b1, b2, b3, b4, b6;
-
+	Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
+	AtomicBoolean vision_busy = new AtomicBoolean(true);
+	AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
+	
+	double sensitivity = 0.30; // 30% sensitivity
 	double lift_power_down = 0.45;
 	double lift_power_up = 1.0;
 	double lift_power_stop = 0.00;
@@ -46,7 +47,8 @@ public class Robot extends SampleRobot {
 	long profiler_start = System.currentTimeMillis();
 	long profiler_end = System.currentTimeMillis();
 		
-	Vision vision = new Vision();
+	Vision vision;
+	Thread thread;
     
 
 	public Robot() {
@@ -54,19 +56,47 @@ public class Robot extends SampleRobot {
 		myRobot = new RobotDrive(0, 1);
 
 		myRobot.setExpiration(0.1);
-		stick = new Joystick(0);
+		
+		/* 
+		 * Setup the victors objects
+		 * http://content.vexrobotics.com/docs/217-2769-Victor888UserManual.pdf
+		 * 
+		 */
 		motor_5 = new Victor(2);
 		motor_6 = new Victor(3);
 		motor_7 = new Victor(4);
-		pneumatic_solenoid = new Solenoid(0);
+		
+		/*
+		 * http://crosstheroadelectronics.com/control_system.html
+		 * http://www.vexrobotics.com/217-4243.html
+		 * http://khengineering.github.io/RoboRio/faq/pcm/
+		 * http://content.vexrobotics.com/vexpro/pdf/217-4243-PCM-Users-Guide-20141230.pdf
+		 */
+		pneumatic_solenoid = new Solenoid(0); // This is the pneumatic object
 
 		// Joystick init
-		b1 = new JoystickButton(stick, 1);
-		b2 = new JoystickButton(stick, 2);
+		/*
+		 * https://wpilib.screenstepslive.com/s/3120/m/7912/l/133053-joysticks
+		 * 
+		 */
+		stick = new Joystick(0);
 
-		b4 = new JoystickButton(stick, 4); // pneumatic
-		b6 = new JoystickButton(stick, 6);
+		btn_lift_up = new JoystickButton(stick, 1); // Lift up
+		btn_lift_down = new JoystickButton(stick, 2); // Lift down
 
+		btn_pneu_close = new JoystickButton(stick, 4); // pneumatic close
+		btn_pneu_open = new JoystickButton(stick, 6); // pneumatic open
+		
+		btn_soft_mode = new JoystickButton(stick,  12); // Soft touch mode
+		
+		
+		// Create vision object and thread
+		/*
+		 * http://khengineering.github.io/RoboRio/vision/cameratest/
+		 * 
+		 */
+		vision = new Vision(vision_busy);
+		thread = new Thread(vision);
 		
 	}
 
@@ -97,21 +127,23 @@ public class Robot extends SampleRobot {
 	}
 
 	public void forklift_up() {
-		motor_5.set(  		lift_power_up);
-		motor_6.set(-1 * 	lift_power_up);
-		motor_7.set(  		lift_power_up);
+		
+		motor_5.set(sensitivity * lift_power_up);
+		motor_6.set(sensitivity * -1 * lift_power_up);
+		motor_7.set(sensitivity * lift_power_up);
+		
 	}
 
 	public void forklift_down() {
-		motor_5.set( -1 * 	lift_power_down);
-		motor_6.set(	 	lift_power_down);
-		motor_7.set( -1 * 	lift_power_down);
+		motor_5.set(sensitivity * -1 * 	lift_power_down);
+		motor_6.set(sensitivity * lift_power_down);
+		motor_7.set(sensitivity * -1 * 	lift_power_down);
 	}
 
 	public void forklift_stop() {
-		motor_5.set(	lift_power_stop);
-		motor_6.set(	lift_power_stop);
-		motor_7.set(	lift_power_stop);
+		motor_5.set(lift_power_stop);
+		motor_6.set(lift_power_stop);
+		motor_7.set(lift_power_stop);
 	}
 
 	public void close_arm() {
@@ -127,24 +159,37 @@ public class Robot extends SampleRobot {
 	 */
 	public void operatorControl() {
 		myRobot.setSafetyEnabled(true);
+		vision_busy.set(false);
 		while (isOperatorControl() && isEnabled()) {
 			profiler_start = System.currentTimeMillis();
-			myRobot.arcadeDrive(stick.getY(), -1 * stick.getX());
+			
+			// Hold the soft touch button to force sensitive controls.
+			soft_touch_mode.set(btn_soft_mode.get());
+			if (soft_touch_mode.get() == true){
+				sensitivity = 0.3;
+			}
+			else {
+				sensitivity = 1.0;
+			}
+			
+			myRobot.arcadeDrive(sensitivity * stick.getY(), 
+								sensitivity * -1 * stick.getX());
+			
 
 			// lifts fork lift up
-			if (b1.get() == true && b2.get() == false) {
+			if (btn_lift_up.get() == true && btn_lift_down.get() == false) {
 				forklift_up();
 			}
 			// brings fork lift down
-			else if (b2.get() == true && b1.get() == false) {
+			else if (btn_lift_down.get() == true && btn_lift_up.get() == false) {
 				forklift_down();
 			} else {
 				forklift_stop();
 			}
 
-			if (b4.get() == true && b6.get() == false) {
+			if (btn_pneu_close.get() == true && btn_pneu_open.get() == false) {
 				close_arm();
-			} else if (b6.get() == true && b4.get() == false) {
+			} else if (btn_pneu_open.get() == true && btn_pneu_close.get() == false) {
 				open_arm();
 			} else {
 				SmartDashboard.putString("ERROR", "STOP TOUCHING THE BUTTONS");
@@ -162,7 +207,12 @@ public class Robot extends SampleRobot {
 				profiler_start = System.currentTimeMillis();
 				// Vision
 
-				new Thread(vision).start();
+				if (vision_busy.get() == false || !thread.isAlive()){
+					vision_busy.set(true);
+					//new Thread(vision).start();
+					//thread.start();
+				}
+				
 
 				profiler_end = System.currentTimeMillis();
 				SmartDashboard.putNumber("profiler_vision_thread", profiler_end

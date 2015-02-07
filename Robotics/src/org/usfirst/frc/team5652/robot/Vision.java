@@ -1,5 +1,7 @@
 package org.usfirst.frc.team5652.robot;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.DrawMode;
 import com.ni.vision.NIVision.Image;
@@ -13,8 +15,10 @@ public class Vision implements Runnable {
 	int session;
 	Image frame;
 	CameraServer server;
+	AtomicBoolean vision_busy;
+	
 
-	public Vision() {
+	public Vision(AtomicBoolean is_vision_busy) {
 
 		// Vision init
 		frame = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
@@ -27,7 +31,9 @@ public class Vision implements Runnable {
 
 
 		server = CameraServer.getInstance();
-		server.setQuality(50);
+		server.setQuality(5);
+		
+		vision_busy = is_vision_busy;
 	}
 
 	@Override
@@ -61,6 +67,7 @@ public class Vision implements Runnable {
 		
 		NIVision.IMAQdxStopAcquisition(session);
 
+		vision_busy.set(false);
 
 	}
 
