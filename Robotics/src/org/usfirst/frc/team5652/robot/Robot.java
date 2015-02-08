@@ -102,6 +102,7 @@ public class Robot extends SampleRobot {
 			vision = new Vision();
 			thread = new Thread(vision);
 			thread.start();
+			SmartDashboard.putString("CAMERA", "MANUAL MODE");
 		}
 		else {
 			// For practice, we don't need complicated.
@@ -110,6 +111,7 @@ public class Robot extends SampleRobot {
 			camserver.setSize(2);
 		     //the camera name (ex "cam0") can be found through the roborio web interface
 			camserver.startAutomaticCapture("cam0");
+			SmartDashboard.putString("CAMERA", "AUTOMATIC MODE");
 		}
 		
 	}
