@@ -2,6 +2,7 @@ package org.usfirst.frc.team5652.robot;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SampleRobot;
@@ -37,6 +38,8 @@ public class Robot extends SampleRobot {
 	Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
 	AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
 	
+	static private boolean IS_VISION_SIMPLE = true;
+	
 	double sensitivity = 0.30; // 30% sensitivity
 	double lift_power_down = 0.45;
 	double lift_power_up = 1.0;
@@ -48,6 +51,8 @@ public class Robot extends SampleRobot {
 		
 	Vision vision;
 	Thread thread;    
+	
+	CameraServer camserver;
 
 	public Robot() {
 		// We have 2 motors per wheel
@@ -93,9 +98,19 @@ public class Robot extends SampleRobot {
 		 * http://khengineering.github.io/RoboRio/vision/cameratest/
 		 * 
 		 */
-		vision = new Vision();
-		thread = new Thread(vision);
-		thread.start();
+		if (IS_VISION_SIMPLE == false) {
+			vision = new Vision();
+			thread = new Thread(vision);
+			thread.start();
+		}
+		else {
+			// For practice, we don't need complicated.
+			camserver = CameraServer.getInstance();
+			camserver.setQuality(10);
+			camserver.setSize(2);
+		     //the camera name (ex "cam0") can be found through the roborio web interface
+			camserver.startAutomaticCapture("cam0");
+		}
 		
 	}
 
@@ -209,8 +224,10 @@ public class Robot extends SampleRobot {
 					SmartDashboard.putString("SOFT_TOUCH", "DISABLED");
 				}
 				
-				// Vision
-				vision.set_vision_send_image();
+				// If we want to do image processing. 
+				if (IS_VISION_SIMPLE == false){
+					vision.set_vision_send_image();
+				}
 
 				profiler_end = System.currentTimeMillis();
 				SmartDashboard.putNumber("profiler_vision_thread", profiler_end
