@@ -35,7 +35,6 @@ public class Robot extends SampleRobot {
 	Victor motor_5, motor_6,motor_7;
 	Solenoid pneumatic_solenoid;
 	Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
-	AtomicBoolean vision_busy = new AtomicBoolean(true);
 	AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
 	
 	double sensitivity = 0.30; // 30% sensitivity
@@ -48,8 +47,7 @@ public class Robot extends SampleRobot {
 	long profiler_end = System.currentTimeMillis();
 		
 	Vision vision;
-	Thread thread;
-    
+	Thread thread;    
 
 	public Robot() {
 		// We have 2 motors per wheel
@@ -95,8 +93,9 @@ public class Robot extends SampleRobot {
 		 * http://khengineering.github.io/RoboRio/vision/cameratest/
 		 * 
 		 */
-		vision = new Vision(vision_busy);
+		vision = new Vision();
 		thread = new Thread(vision);
+		thread.start();
 		
 	}
 
@@ -159,7 +158,6 @@ public class Robot extends SampleRobot {
 	 */
 	public void operatorControl() {
 		myRobot.setSafetyEnabled(true);
-		vision_busy.set(false);
 		while (isOperatorControl() && isEnabled()) {
 			profiler_start = System.currentTimeMillis();
 			
@@ -191,8 +189,6 @@ public class Robot extends SampleRobot {
 				close_arm();
 			} else if (btn_pneu_open.get() == true && btn_pneu_close.get() == false) {
 				open_arm();
-			} else {
-				SmartDashboard.putString("ERROR", "STOP TOUCHING THE BUTTONS");
 			}
 
 			// 1/0.005 s = 5 ms
@@ -205,14 +201,16 @@ public class Robot extends SampleRobot {
 						- profiler_start);
 				SmartDashboard.putString("ERROR", "NONE");
 				profiler_start = System.currentTimeMillis();
-				// Vision
-
-				if (vision_busy.get() == false || !thread.isAlive()){
-					vision_busy.set(true);
-					//new Thread(vision).start();
-					//thread.start();
+				
+				if(soft_touch_mode.get() == true){
+					SmartDashboard.putString("SOFT_TOUCH", "ENABLED");
+				}
+				else {
+					SmartDashboard.putString("SOFT_TOUCH", "DISABLED");
 				}
 				
+				// Vision
+				vision.set_vision_send_image();
 
 				profiler_end = System.currentTimeMillis();
 				SmartDashboard.putNumber("profiler_vision_thread", profiler_end
