@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -37,6 +38,9 @@ public class Robot extends SampleRobot {
 	Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
 	AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
 	
+	// Power distribution module
+	PowerDistributionPanel pdp;
+	
 	// Motors
 	Victor motor_5, motor_6,motor_7;
 	
@@ -65,8 +69,12 @@ public class Robot extends SampleRobot {
 		// We have 2 motors per wheel
 		myRobot = new RobotDrive(0, 1);
 
+		// Is 100 ms too little for a timeout?
+		// Should it be 1 second?
 		myRobot.setExpiration(0.1);
 		
+		// PDP setup
+		pdp = new PowerDistributionPanel();
 		/* 
 		 * Setup the victors objects
 		 * http://content.vexrobotics.com/docs/217-2769-Victor888UserManual.pdf
@@ -235,6 +243,8 @@ public class Robot extends SampleRobot {
 					SmartDashboard.putString("SOFT_TOUCH", "DISABLED");
 				}
 				
+				// Compressor diagnostics
+				// http://wpilib.screenstepslive.com/s/4485/m/13503/l/216217?data-resolve-url=true&data-manual-id=13503
 				SmartDashboard.putNumber("Compressor AMPS", pneumatic_compressor.getCompressorCurrent());
 				SmartDashboard.putBoolean("CLOSED LOOP?", pneumatic_compressor.getClosedLoopControl());
 				SmartDashboard.putBoolean("Compressor Current Fault", pneumatic_compressor.getCompressorCurrentTooHighFault());
