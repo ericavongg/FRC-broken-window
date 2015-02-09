@@ -3,6 +3,7 @@ package org.usfirst.frc.team5652.robot;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SampleRobot;
@@ -33,12 +34,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends SampleRobot {
 	RobotDrive myRobot;
 	Joystick stick;
-	Victor motor_5, motor_6,motor_7;
-	Solenoid pneumatic_solenoid;
 	Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
 	AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
 	
-	static private boolean IS_VISION_SIMPLE = true;
+	// Motors
+	Victor motor_5, motor_6,motor_7;
+	
+	// Pneumatics
+	static private int PCM_CAM_ID = 2;
+	Solenoid pneumatic_solenoid;
+	Compressor pneumatic_compressor;
 	
 	double sensitivity = 0.30; // 30% sensitivity
 	double lift_power_down = 0.45;
@@ -46,11 +51,13 @@ public class Robot extends SampleRobot {
 	double lift_power_stop = 0.00;
 	Integer loop_count = 0;
 
-	long profiler_start = System.currentTimeMillis();
-	long profiler_end = System.currentTimeMillis();
+	long profiler_start;
+	long profiler_end;
 		
 	Vision vision;
 	Thread thread;    
+	static private boolean IS_VISION_SIMPLE = true;
+
 	
 	CameraServer camserver;
 
@@ -75,7 +82,9 @@ public class Robot extends SampleRobot {
 		 * http://khengineering.github.io/RoboRio/faq/pcm/
 		 * http://content.vexrobotics.com/vexpro/pdf/217-4243-PCM-Users-Guide-20141230.pdf
 		 */
-		pneumatic_solenoid = new Solenoid(0); // This is the pneumatic object
+		pneumatic_solenoid = new Solenoid(PCM_CAM_ID, 0); // This is the pneumatic object
+		pneumatic_compressor = new Compressor(PCM_CAM_ID);
+		pneumatic_compressor.setClosedLoopControl(true);
 
 		// Joystick init
 		/*
@@ -226,6 +235,21 @@ public class Robot extends SampleRobot {
 					SmartDashboard.putString("SOFT_TOUCH", "DISABLED");
 				}
 				
+				SmartDashboard.putNumber("Compressor AMPS", pneumatic_compressor.getCompressorCurrent());
+				SmartDashboard.putBoolean("CLOSED LOOP?", pneumatic_compressor.getClosedLoopControl());
+				SmartDashboard.putBoolean("Compressor Current Fault", pneumatic_compressor.getCompressorCurrentTooHighFault());
+				SmartDashboard.putBoolean("Compressor missing", pneumatic_compressor.getCompressorNotConnectedFault());
+				SmartDashboard.putBoolean("Compressor Shorted", pneumatic_compressor.getCompressorShortedFault());
+				SmartDashboard.putBoolean("Pressure switch too low", pneumatic_compressor.getPressureSwitchValue());
+				
+				SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_solenoid.getPCMSolenoidVoltageFault());
+				SmartDashboard.putNumber("Solenoid bit faults", pneumatic_solenoid.getPCMSolenoidBlackList());
+				SmartDashboard.putNumber("Solenoid bit status", pneumatic_solenoid.getAll());
+				
+				SmartDashboard.putNumber("Stick POV", stick.getPOV());
+				SmartDashboard.putNumber("Stick throttle", stick.getThrottle());
+				
+
 				// If we want to do image processing. 
 				if (IS_VISION_SIMPLE == false){
 					vision.set_vision_send_image();
