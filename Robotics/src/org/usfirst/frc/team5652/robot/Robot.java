@@ -38,6 +38,8 @@ public class Robot extends SampleRobot {
 	Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
 	AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
 	
+	double auto_drive_power; 
+	
 	// Power distribution module
 	PowerDistributionPanel pdp;
 	
@@ -69,6 +71,8 @@ public class Robot extends SampleRobot {
 		// We have 2 motors per wheel
 		myRobot = new RobotDrive(0, 1);
 
+		auto_drive_power = 1;
+		
 		// Is 100 ms too little for a timeout?
 		// Should it be 1 second?
 		myRobot.setExpiration(0.1);
@@ -133,34 +137,121 @@ public class Robot extends SampleRobot {
 		
 	}
 
+	private void drive_stop(){
+		myRobot.drive(0, 0.0); 
+	}
+	
+	/*
+	 * For autonomous
+	 * Depends the auto_drive_power 
+	 */
+	private void drive_forward(double seconds){
+		myRobot.drive(auto_drive_power, 0.0); 
+		Timer.delay(seconds);
+		drive_stop();
+	}
+	
+	/*
+	 * For autonomous
+	 * Set your own power
+	 */
+	private void drive_forward(double power, double seconds){
+		myRobot.drive(power, 0.0); 
+		Timer.delay(seconds);
+		drive_stop();
+	}
+	
+	/*
+	 * For autonomous
+	 * Depends the auto_drive_power 
+	 */
+	private void drive_backwards(double seconds){
+		myRobot.drive( -1 * auto_drive_power, 0.0); 
+		Timer.delay(seconds);
+		drive_stop();
+	}
+	
+	/*
+	 * For autonomous
+	 * Set your own power
+	 */
+	private void drive_backwards(double power, double seconds){
+		myRobot.drive( -1 * power, 0.0); 
+		Timer.delay(seconds);
+		drive_stop();
+	}
+	
+	/*
+	 * For autonomous
+	 * Set your own power
+	 */
+	private void drive_rotate_left(double power, double seconds){
+		myRobot.drive(0, power); 
+		Timer.delay(seconds);
+		drive_stop();
+	}
+	
+	/*
+	 * For autonomous
+	 * Set your own power
+	 */
+	private void drive_rotate_left(double seconds){
+		myRobot.drive(0, auto_drive_power); 
+		Timer.delay(seconds);
+		drive_stop();
+	}
+	
+	/*
+	 * For autonomous
+	 * Set your own power
+	 */
+	private void drive_rotate_right(double seconds){
+		myRobot.drive(0, -1 * auto_drive_power); 
+		Timer.delay(seconds);
+		drive_stop();
+	}
+	
+	/*
+	 * For autonomous
+	 * Set your own power
+	 */
+	private void drive_rotate_right(double power, double seconds){
+		myRobot.drive(0, -1 * power); 
+		Timer.delay(seconds);
+		drive_stop();
+	}
+	
 	/**
 	 * Drive left & right motors for 2 seconds then stop
 	 */
 	public void autonomous() {
 		myRobot.setSafetyEnabled(false);
-		myRobot.drive(-0.5, 0.0); // drive forwards at 5%
-		Timer.delay(1.5); // for 1.5 seconds
-		myRobot.drive(-0.05, 0.0); // slows down to 5% to pick up box
-		Timer.delay(0.5); // for .5 seconds
-
+		
+		drive_forward(0.5, 0.5);
+		
 		forklift_up();
-		Timer.delay(.3);
+		Timer.delay(0.5);
 		forklift_stop();
 
-		myRobot.drive(-0.5, 0.0); // drive forwards half speed
-		Timer.delay(5.0); // for 5 seconds
-
-		myRobot.drive(0.0, 0.0); // stop
+		drive_rotate_right(0.75, 4);
+		
+		drive_forward(0.5, 5);
 
 		forklift_down();
 		Timer.delay(.3);
 		forklift_stop();
+		
+		drive_backwards(0.5,3);
+		
+		drive_rotate_left(0.75, 4);
+		
+		drive_forward(0.5, 3);
 
 		myRobot.drive(0.0, 0.0); // stop robot
 	}
 
 	public void forklift_up() {
-		
+		//TODO Add limit switch check to prevent hitting the sprockets.	
 		motor_5.set(sensitivity * lift_power_up);
 		motor_6.set(sensitivity * -1 * lift_power_up);
 		motor_7.set(sensitivity * lift_power_up);
@@ -168,6 +259,7 @@ public class Robot extends SampleRobot {
 	}
 
 	public void forklift_down() {
+		// TODO Add limit switch check to prevent hitting the sprockets.
 		motor_5.set(sensitivity * -1 * 	lift_power_down);
 		motor_6.set(sensitivity * lift_power_down);
 		motor_7.set(sensitivity * -1 * 	lift_power_down);
