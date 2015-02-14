@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -35,6 +36,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends SampleRobot {
 	RobotDrive myRobot;
 	Joystick stick;
+	DigitalInput upperLimitSwitch = new DigitalInput (0);
+	DigitalInput lowerLimitSwitch = new DigitalInput (1);
 	Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
 	AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
 	
@@ -252,17 +255,20 @@ public class Robot extends SampleRobot {
 
 	public void forklift_up() {
 		//TODO Add limit switch check to prevent hitting the sprockets.	
+		if (upperLimitSwitch.get()) {
 		motor_5.set(sensitivity * lift_power_up);
 		motor_6.set(sensitivity * -1 * lift_power_up);
 		motor_7.set(sensitivity * lift_power_up);
-		
+		}
 	}
 
 	public void forklift_down() {
 		// TODO Add limit switch check to prevent hitting the sprockets.
+		if (lowerLimitSwitch.get()) {
 		motor_5.set(sensitivity * -1 * 	lift_power_down);
 		motor_6.set(sensitivity * lift_power_down);
 		motor_7.set(sensitivity * -1 * 	lift_power_down);
+		}
 	}
 
 	public void forklift_stop() {
