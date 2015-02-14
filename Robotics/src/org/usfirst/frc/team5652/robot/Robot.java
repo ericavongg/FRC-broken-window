@@ -47,7 +47,7 @@ public class Robot extends SampleRobot {
 	PowerDistributionPanel pdp;
 	
 	// Motors
-	Victor motor_5, motor_6,motor_7;
+	Victor motor_5, motor_6,motor_7, motor_8;
 	
 	// Pneumatics
 	static private int PCM_CAM_ID = 2;
@@ -259,6 +259,7 @@ public class Robot extends SampleRobot {
 		motor_5.set(sensitivity * lift_power_up);
 		motor_6.set(sensitivity * -1 * lift_power_up);
 		motor_7.set(sensitivity * lift_power_up);
+		motor_8.set(sensitivity * -1 * lift_power_up);
 		}
 	}
 
@@ -268,6 +269,7 @@ public class Robot extends SampleRobot {
 		motor_5.set(sensitivity * -1 * 	lift_power_down);
 		motor_6.set(sensitivity * lift_power_down);
 		motor_7.set(sensitivity * -1 * 	lift_power_down);
+		motor_8.set(sensitivity * lift_power_down);
 		}
 	}
 
@@ -275,6 +277,7 @@ public class Robot extends SampleRobot {
 		motor_5.set(lift_power_stop);
 		motor_6.set(lift_power_stop);
 		motor_7.set(lift_power_stop);
+		motor_8.set(lift_power_stop);
 	}
 
 	public void close_arm() {
