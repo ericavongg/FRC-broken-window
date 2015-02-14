@@ -302,14 +302,14 @@ public class Robot extends SampleRobot {
 			// Hold the soft touch button to force sensitive controls.
 			soft_touch_mode.set(btn_soft_mode.get());
 			if (soft_touch_mode.get() == true){
-				sensitivity = 0.3;
+				sensitivity = 0.8;
 			}
 			else {
 				sensitivity = 1.0;
 			}
 			
 			myRobot.arcadeDrive(sensitivity * stick.getY(), 
-								sensitivity * -1 * stick.getX());
+								-1 * 0.5 * stick.getX());
 			
 
 			// lifts fork lift up
