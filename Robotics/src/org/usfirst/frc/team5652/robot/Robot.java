@@ -51,10 +51,10 @@ public class Robot extends SampleRobot {
 	
 	// Pneumatics
 	static private int PCM_CAM_ID = 2;
-	Solenoid pneumatic_solenoid;
-	Compressor pneumatic_compressor;
+	// Solenoid pneumatic_solenoid;
+	//sCompressor pneumatic_compressor;
 	
-	double sensitivity = 0.30; // 30% sensitivity
+	double sensitivity = 0.90; // 30% sensitivity
 	double lift_power_down = 0.45;
 	double lift_power_up = 1.0;
 	double lift_power_stop = 0.00;
@@ -90,6 +90,7 @@ public class Robot extends SampleRobot {
 		motor_5 = new Victor(2);
 		motor_6 = new Victor(3);
 		motor_7 = new Victor(4);
+		motor_8 = new Victor(5);
 		
 		/*
 		 * http://crosstheroadelectronics.com/control_system.html
@@ -97,9 +98,9 @@ public class Robot extends SampleRobot {
 		 * http://khengineering.github.io/RoboRio/faq/pcm/
 		 * http://content.vexrobotics.com/vexpro/pdf/217-4243-PCM-Users-Guide-20141230.pdf
 		 */
-		pneumatic_solenoid = new Solenoid(PCM_CAM_ID, 0); // This is the pneumatic object
-		pneumatic_compressor = new Compressor(PCM_CAM_ID);
-		pneumatic_compressor.setClosedLoopControl(true);
+		//pneumatic_solenoid = new Solenoid(PCM_CAM_ID, 0); // This is the pneumatic object
+		//pneumatic_compressor = new Compressor(PCM_CAM_ID);
+		//pneumatic_compressor.setClosedLoopControl(true);
 
 		// Joystick init
 		/*
@@ -149,7 +150,7 @@ public class Robot extends SampleRobot {
 	 * Depends the auto_drive_power 
 	 */
 	private void drive_forward(double seconds){
-		myRobot.drive(auto_drive_power, 0.0); 
+		myRobot.drive(-1 * auto_drive_power, 0.0); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -159,7 +160,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_forward(double power, double seconds){
-		myRobot.drive(power, 0.0); 
+		myRobot.drive(-1 * power, 0.0); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -169,7 +170,7 @@ public class Robot extends SampleRobot {
 	 * Depends the auto_drive_power 
 	 */
 	private void drive_backwards(double seconds){
-		myRobot.drive( -1 * auto_drive_power, 0.0); 
+		myRobot.drive( 1* auto_drive_power, 0.0); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -179,7 +180,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_backwards(double power, double seconds){
-		myRobot.drive( -1 * power, 0.0); 
+		myRobot.drive( 1 * power, 0.0); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -189,7 +190,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_rotate_left(double power, double seconds){
-		myRobot.drive(0, power); 
+		myRobot.drive(0.50, power); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -199,7 +200,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_rotate_left(double seconds){
-		myRobot.drive(0, auto_drive_power); 
+		myRobot.drive(0.50, auto_drive_power); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -209,7 +210,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_rotate_right(double seconds){
-		myRobot.drive(0, -1 * auto_drive_power); 
+		myRobot.drive(0.50, -1 * auto_drive_power); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -219,7 +220,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_rotate_right(double power, double seconds){
-		myRobot.drive(0, -1 * power); 
+		myRobot.drive(0.50, -1 * power); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -230,46 +231,48 @@ public class Robot extends SampleRobot {
 	public void autonomous() {
 		myRobot.setSafetyEnabled(false);
 		
-		drive_forward(0.5, 0.5);
-		
-		forklift_up();
-		Timer.delay(0.5);
-		forklift_stop();
-
-		drive_rotate_right(0.75, 4);
-		
-		drive_forward(0.5, 5);
-
-		forklift_down();
-		Timer.delay(.3);
-		forklift_stop();
-		
-		drive_backwards(0.5,3);
-		
-		drive_rotate_left(0.75, 4);
-		
-		drive_forward(0.5, 3);
+		drive_forward(0.5, 1);
+		drive_rotate_right(0.4, 0.5);
+		drive_backwards(0.5,1);
+//		
+//		forklift_up();
+//		Timer.delay(0.5);
+//		forklift_stop();
+//
+//		drive_rotate_right(0.75, 4);
+//		
+//		drive_forward(0.5, 5);
+//
+//		forklift_down();
+//		Timer.delay(.3);
+//		forklift_stop();
+//		
+//		drive_backwards(0.5,3);
+//		
+//		drive_rotate_left(0.75, 4);
+//		
+//		drive_forward(0.5, 3);
 
 		myRobot.drive(0.0, 0.0); // stop robot
 	}
 
 	public void forklift_up() {
-		//TODO Add limit switch check to prevent hitting the sprockets.	
-		if (upperLimitSwitch.get()) {
-		motor_5.set(sensitivity * lift_power_up);
-		motor_6.set(sensitivity * -1 * lift_power_up);
-		motor_7.set(sensitivity * lift_power_up);
-		motor_8.set(sensitivity * -1 * lift_power_up);
+		//TODO Add tweening
+		if (!upperLimitSwitch.get()) {
+			motor_5.set(sensitivity * lift_power_up);
+			motor_6.set(sensitivity * -1 * lift_power_up);
+			motor_7.set(sensitivity * lift_power_up);
+			motor_8.set(sensitivity * -1 * lift_power_up);
 		}
 	}
 
 	public void forklift_down() {
 		// TODO Add limit switch check to prevent hitting the sprockets.
-		if (lowerLimitSwitch.get()) {
-		motor_5.set(sensitivity * -1 * 	lift_power_down);
-		motor_6.set(sensitivity * lift_power_down);
-		motor_7.set(sensitivity * -1 * 	lift_power_down);
-		motor_8.set(sensitivity * lift_power_down);
+		if (!lowerLimitSwitch.get()) {
+			motor_5.set( -1 * 	lift_power_down);
+			motor_6.set( lift_power_down);
+			motor_7.set( -1 * 	lift_power_down);
+			motor_8.set( lift_power_down);
 		}
 	}
 
@@ -281,11 +284,11 @@ public class Robot extends SampleRobot {
 	}
 
 	public void close_arm() {
-		pneumatic_solenoid.set(true);
+		//pneumatic_solenoid.set(true);
 	}
 
 	public void open_arm() {
-		pneumatic_solenoid.set(false);
+		//pneumatic_solenoid.set(false);
 	}
 
 	/**
@@ -346,16 +349,16 @@ public class Robot extends SampleRobot {
 				
 				// Compressor diagnostics
 				// http://wpilib.screenstepslive.com/s/4485/m/13503/l/216217?data-resolve-url=true&data-manual-id=13503
-				SmartDashboard.putNumber("Compressor AMPS", pneumatic_compressor.getCompressorCurrent());
+				/*SmartDashboard.putNumber("Compressor AMPS", pneumatic_compressor.getCompressorCurrent());
 				SmartDashboard.putBoolean("CLOSED LOOP?", pneumatic_compressor.getClosedLoopControl());
 				SmartDashboard.putBoolean("Compressor Current Fault", pneumatic_compressor.getCompressorCurrentTooHighFault());
 				SmartDashboard.putBoolean("Compressor missing", pneumatic_compressor.getCompressorNotConnectedFault());
 				SmartDashboard.putBoolean("Compressor Shorted", pneumatic_compressor.getCompressorShortedFault());
 				SmartDashboard.putBoolean("Pressure switch too low", pneumatic_compressor.getPressureSwitchValue());
-				
-				SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_solenoid.getPCMSolenoidVoltageFault());
-				SmartDashboard.putNumber("Solenoid bit faults", pneumatic_solenoid.getPCMSolenoidBlackList());
-				SmartDashboard.putNumber("Solenoid bit status", pneumatic_solenoid.getAll());
+				*/
+				//SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_solenoid.getPCMSolenoidVoltageFault());
+				//SmartDashboard.putNumber("Solenoid bit faults", pneumatic_solenoid.getPCMSolenoidBlackList());
+				//SmartDashboard.putNumber("Solenoid bit status", pneumatic_solenoid.getAll());
 				
 				SmartDashboard.putNumber("Stick POV", stick.getPOV());
 				SmartDashboard.putNumber("Stick throttle", stick.getThrottle());
