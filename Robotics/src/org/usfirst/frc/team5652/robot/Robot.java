@@ -34,12 +34,18 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * instead if you're new.
  */
 public class Robot extends SampleRobot {
+	// Robot drive settings (tank drive)
 	private RobotDrive myRobot;
+	
+	// Joystick code
 	private Joystick stick;
-	private DigitalInput upperLimitSwitch = new DigitalInput (0);
-	private DigitalInput lowerLimitSwitch = new DigitalInput (1);
+	// Joystick buttons
 	private Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
 	private AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
+	
+	// Limit switches for fork lift.
+	private DigitalInput upperLimitSwitch = new DigitalInput (0);
+	private DigitalInput lowerLimitSwitch = new DigitalInput (1);
 	
 	// Autonomous drive power. 
 	// 1.0 is FULL SPEED. 
