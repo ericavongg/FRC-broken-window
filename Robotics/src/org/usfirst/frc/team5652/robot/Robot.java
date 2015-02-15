@@ -313,6 +313,94 @@ public class Robot extends SampleRobot {
 	public void open_arm() {
 		pneumatic_solenoid.set(false);
 	}
+	
+	private void forklift_logic() {
+		// lifts fork lift up
+		if (btn_lift_up.get() == true && btn_lift_down.get() == false) {
+			forklift_up();
+		}
+		// brings fork lift down
+		else if (btn_lift_down.get() == true && btn_lift_up.get() == false) {
+			forklift_down();
+		} else {
+			forklift_stop();
+		}
+
+		if (btn_pneu_close.get() == true && btn_pneu_open.get() == false) {
+			close_arm();
+		} else if (btn_pneu_open.get() == true && btn_pneu_close.get() == false) {
+			open_arm();
+		}
+	}
+	
+	private void soft_touch_logic(){
+		// Hold the soft touch button to force sensitive controls.
+		soft_touch_mode.set(btn_soft_mode.get());
+		if (soft_touch_mode.get() == true) {
+			sensitivity = MIN_SENSITIVITY;
+		} else {
+			sensitivity = MAX_SENSITIVITY;
+		}
+	}
+	
+	private void soft_touch_diagnostics() {
+		if(soft_touch_mode.get() == true){
+			SmartDashboard.putString("SOFT_TOUCH", "ENABLED");
+		}
+		else {
+			SmartDashboard.putString("SOFT_TOUCH", "DISABLED");
+		}
+		sensitivity = SmartDashboard.getNumber("SENSITIVITY");
+	}
+	
+	private void compressor_diagnostics() {
+		// Compressor diagnostics
+		// http://wpilib.screenstepslive.com/s/4485/m/13503/l/216217?data-resolve-url=true&data-manual-id=13503
+		SmartDashboard.putNumber("Compressor AMPS", pneumatic_compressor.getCompressorCurrent());
+		SmartDashboard.putBoolean("CLOSED LOOP?", pneumatic_compressor.getClosedLoopControl());
+		SmartDashboard.putBoolean("Compressor Current Fault", pneumatic_compressor.getCompressorCurrentTooHighFault());
+		SmartDashboard.putBoolean("Compressor missing", pneumatic_compressor.getCompressorNotConnectedFault());
+		SmartDashboard.putBoolean("Compressor Shorted", pneumatic_compressor.getCompressorShortedFault());
+		SmartDashboard.putBoolean("Pressure switch too low", pneumatic_compressor.getPressureSwitchValue());
+		
+		SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_solenoid.getPCMSolenoidVoltageFault());
+		SmartDashboard.putNumber("Solenoid bit faults", pneumatic_solenoid.getPCMSolenoidBlackList());
+		SmartDashboard.putNumber("Solenoid bit status", pneumatic_solenoid.getAll());
+		
+		SmartDashboard.putNumber("Stick POV", stick.getPOV());
+		SmartDashboard.putNumber("Stick throttle", stick.getThrottle());
+	}
+	
+	private void interval_logic() {
+		// 1/0.005 s = 5 ms
+		// 200 * 0.005 = 1000 = 1 sec
+		if ((loop_count++ % 100) == 0) {
+
+			// Profiler code, don't edit
+			profiler_end = System.currentTimeMillis();
+			SmartDashboard.putNumber("profiler_drive_ms", profiler_end
+					- profiler_start);
+			SmartDashboard.putString("ERROR", "NONE");
+			profiler_start = System.currentTimeMillis();
+			
+			// ADD LOGIC HERE FOR DIAGNOSTICS
+			soft_touch_diagnostics();
+			compressor_diagnostics();
+			
+			auto_drive_power = SmartDashboard.getNumber("AUTO_DRIVE_POWER");
+
+
+			// If we want to do image processing. 
+			if (IS_VISION_SIMPLE == false){
+				vision.set_vision_send_image();
+			}
+
+			// DON't EDIT, PROFILER CODE
+			profiler_end = System.currentTimeMillis();
+			SmartDashboard.putNumber("profiler_loop_ms", profiler_end
+					- profiler_start);
+		}
+	}
 
 	/**
 	 * Runs the motors with arcade steering.
@@ -322,83 +410,19 @@ public class Robot extends SampleRobot {
 		while (isOperatorControl() && isEnabled()) {
 			profiler_start = System.currentTimeMillis();
 			
-			// Hold the soft touch button to force sensitive controls.
-			soft_touch_mode.set(btn_soft_mode.get());
-			if (soft_touch_mode.get() == true){
-				sensitivity = MIN_SENSITIVITY;
-			}
-			else {
-				sensitivity = MAX_SENSITIVITY;
-			}
-			
+			// I lowered the sensitivity of the Y axis 
+			// so the robot doesn't turn so fast anymore.
 			myRobot.arcadeDrive(sensitivity * stick.getY(), 
 								-1 * 0.5 * stick.getX());
 			
+			// This needs to run all the time
+			soft_touch_logic();
+			forklift_logic();
+			
+			// The following runs occasionally.
+			interval_logic();
 
-			// lifts fork lift up
-			if (btn_lift_up.get() == true && btn_lift_down.get() == false) {
-				forklift_up();
-			}
-			// brings fork lift down
-			else if (btn_lift_down.get() == true && btn_lift_up.get() == false) {
-				forklift_down();
-			} else {
-				forklift_stop();
-			}
-
-			if (btn_pneu_close.get() == true && btn_pneu_open.get() == false) {
-				close_arm();
-			} else if (btn_pneu_open.get() == true && btn_pneu_close.get() == false) {
-				open_arm();
-			}
-
-			// 1/0.005 s = 5 ms
-			// 200 * 0.005 = 1000 = 1 sec
-			if ((loop_count++ % 30) == 0) {
-
-				// Profiler code
-				profiler_end = System.currentTimeMillis();
-				SmartDashboard.putNumber("profiler_drive", profiler_end
-						- profiler_start);
-				SmartDashboard.putString("ERROR", "NONE");
-				profiler_start = System.currentTimeMillis();
-				
-				if(soft_touch_mode.get() == true){
-					SmartDashboard.putString("SOFT_TOUCH", "ENABLED");
-				}
-				else {
-					SmartDashboard.putString("SOFT_TOUCH", "DISABLED");
-				}
-				
-				// Compressor diagnostics
-				// http://wpilib.screenstepslive.com/s/4485/m/13503/l/216217?data-resolve-url=true&data-manual-id=13503
-				SmartDashboard.putNumber("Compressor AMPS", pneumatic_compressor.getCompressorCurrent());
-				SmartDashboard.putBoolean("CLOSED LOOP?", pneumatic_compressor.getClosedLoopControl());
-				SmartDashboard.putBoolean("Compressor Current Fault", pneumatic_compressor.getCompressorCurrentTooHighFault());
-				SmartDashboard.putBoolean("Compressor missing", pneumatic_compressor.getCompressorNotConnectedFault());
-				SmartDashboard.putBoolean("Compressor Shorted", pneumatic_compressor.getCompressorShortedFault());
-				SmartDashboard.putBoolean("Pressure switch too low", pneumatic_compressor.getPressureSwitchValue());
-				
-				SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_solenoid.getPCMSolenoidVoltageFault());
-				SmartDashboard.putNumber("Solenoid bit faults", pneumatic_solenoid.getPCMSolenoidBlackList());
-				SmartDashboard.putNumber("Solenoid bit status", pneumatic_solenoid.getAll());
-				
-				SmartDashboard.putNumber("Stick POV", stick.getPOV());
-				SmartDashboard.putNumber("Stick throttle", stick.getThrottle());
-				
-				auto_drive_power = SmartDashboard.getNumber("AUTO_DRIVE_POWER");
-				sensitivity = SmartDashboard.getNumber("SENSITIVITY");
-
-				// If we want to do image processing. 
-				if (IS_VISION_SIMPLE == false){
-					vision.set_vision_send_image();
-				}
-
-				profiler_end = System.currentTimeMillis();
-				SmartDashboard.putNumber("profiler_vision_thread_ms", profiler_end
-						- profiler_start);
-			}
-
+			
 			Timer.delay(0.005); // wait for a motor update time
 		}
 
