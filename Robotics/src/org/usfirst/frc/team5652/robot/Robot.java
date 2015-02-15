@@ -40,7 +40,11 @@ public class Robot extends SampleRobot {
 	private DigitalInput lowerLimitSwitch = new DigitalInput (1);
 	private Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
 	private AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
-	private double auto_drive_power; 
+	
+	// Autonomous drive power. 
+	// 1.0 is FULL SPEED. 
+	// Change this if you need to power
+	private double auto_drive_power = 0.5; 
 	
 	static private double MAX_SENSITIVITY = 1.0; // DO NOT EDIT
 	
@@ -82,8 +86,6 @@ public class Robot extends SampleRobot {
 	public Robot() {
 		// We have 2 motors per wheel
 		myRobot = new RobotDrive(0, 1);
-
-		auto_drive_power = 1;
 		
 		// Is 100 ms too little for a timeout?
 		// Should it be 1 second?
@@ -148,6 +150,9 @@ public class Robot extends SampleRobot {
 			SmartDashboard.putString("CAMERA", "AUTOMATIC MODE");
 		}
 		
+		// SmartDashboard defaults
+		SmartDashboard.putNumber("AUTO_DRIVE_POWER", auto_drive_power);
+		SmartDashboard.putNumber("AUTO_DRIVE_POWER", sensitivity);
 	}
 
 	/*
@@ -182,7 +187,7 @@ public class Robot extends SampleRobot {
 	 * Depends the auto_drive_power 
 	 */
 	private void drive_backwards(double seconds){
-		myRobot.drive( 1* auto_drive_power, 0.0); 
+		myRobot.drive(auto_drive_power, 0.0); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -192,7 +197,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_backwards(double power, double seconds){
-		myRobot.drive( 1 * power, 0.0); 
+		myRobot.drive(power, 0.0); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -202,7 +207,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_rotate_left(double power, double seconds){
-		myRobot.drive(0.50, power); 
+		myRobot.drive(power, 1); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -212,7 +217,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_rotate_left(double seconds){
-		myRobot.drive(0.50, auto_drive_power); 
+		myRobot.drive(auto_drive_power, 1); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -222,7 +227,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_rotate_right(double seconds){
-		myRobot.drive(0.50, -1 * auto_drive_power); 
+		myRobot.drive(auto_drive_power, -1); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -232,7 +237,7 @@ public class Robot extends SampleRobot {
 	 * Set your own power
 	 */
 	private void drive_rotate_right(double power, double seconds){
-		myRobot.drive(0.50, -1 * power); 
+		myRobot.drive(power, -1); 
 		Timer.delay(seconds);
 		drive_stop();
 	}
@@ -375,6 +380,8 @@ public class Robot extends SampleRobot {
 				SmartDashboard.putNumber("Stick POV", stick.getPOV());
 				SmartDashboard.putNumber("Stick throttle", stick.getThrottle());
 				
+				auto_drive_power = SmartDashboard.getNumber("AUTO_DRIVE_POWER");
+				sensitivity = SmartDashboard.getNumber("SENSITIVITY");
 
 				// If we want to do image processing. 
 				if (IS_VISION_SIMPLE == false){
@@ -382,7 +389,7 @@ public class Robot extends SampleRobot {
 				}
 
 				profiler_end = System.currentTimeMillis();
-				SmartDashboard.putNumber("profiler_vision_thread", profiler_end
+				SmartDashboard.putNumber("profiler_vision_thread_ms", profiler_end
 						- profiler_start);
 			}
 
