@@ -44,8 +44,8 @@ public class Robot extends SampleRobot {
 	private AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
 	
 	// Limit switches for fork lift.
-	private DigitalInput upperLimitSwitch = new DigitalInput (0);
-	private DigitalInput lowerLimitSwitch = new DigitalInput (1);
+	private DigitalInput upperLimitSwitch = new LimitSwitch (0);
+	private DigitalInput lowerLimitSwitch = new LimitSwitch (1);
 	
 	// Autonomous drive power. 
 	// 1.0 is FULL SPEED. 
