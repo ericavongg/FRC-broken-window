@@ -34,42 +34,51 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * instead if you're new.
  */
 public class Robot extends SampleRobot {
-	RobotDrive myRobot;
-	Joystick stick;
-	DigitalInput upperLimitSwitch = new DigitalInput (0);
-	DigitalInput lowerLimitSwitch = new DigitalInput (1);
-	Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
-	AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
+	private RobotDrive myRobot;
+	private Joystick stick;
+	private DigitalInput upperLimitSwitch = new DigitalInput (0);
+	private DigitalInput lowerLimitSwitch = new DigitalInput (1);
+	private Button btn_lift_up, btn_lift_down, btn_pneu_close, btn_pneu_open, btn_soft_mode;
+	private AtomicBoolean soft_touch_mode = new AtomicBoolean(false);
+	private double auto_drive_power; 
 	
-	double auto_drive_power; 
+	static private double MAX_SENSITIVITY = 1.0; // DO NOT EDIT
+	
+	// Modify this value to change sensitivity of the controls. 
+	private double MIN_SENSITIVITY = 0.75; 
+	
+
+	private double sensitivity = MIN_SENSITIVITY;
+	
+	// Change to false to use image processing code.
+	static private boolean IS_VISION_SIMPLE = true;
 	
 	// Power distribution module
-	PowerDistributionPanel pdp;
+	private PowerDistributionPanel pdp;
 	
 	// Motors
-	Victor motor_5, motor_6,motor_7, motor_8;
+	private Victor motor_5, motor_6,motor_7, motor_8;
 	
 	// Pneumatics
 	static private int PCM_CAM_ID = 2;
-	// Solenoid pneumatic_solenoid;
-	//sCompressor pneumatic_compressor;
+	private Solenoid pneumatic_solenoid;
+	private Compressor pneumatic_compressor;
 	
-	double sensitivity = 0.90; // 30% sensitivity
-	double lift_power_down = 0.45;
-	double lift_power_up = 1.0;
-	double lift_power_stop = 0.00;
-	Integer loop_count = 0;
+	// Lift controls p
+	private double lift_power_down = 0.45;
+	private double lift_power_up = 1.0;
+	private double lift_power_stop = 0.00;
+	private Integer loop_count = 0;
 
-	long profiler_start;
-	long profiler_end;
-		
-	Vision vision;
-	Thread thread;    
-	static private boolean IS_VISION_SIMPLE = true;
+	private long profiler_start;
+	private long profiler_end;
+
+	// Camera variables
+	private Vision vision;
+	private Thread thread;
+	private CameraServer camserver;
 
 	
-	CameraServer camserver;
-
 	public Robot() {
 		// We have 2 motors per wheel
 		myRobot = new RobotDrive(0, 1);
@@ -98,9 +107,9 @@ public class Robot extends SampleRobot {
 		 * http://khengineering.github.io/RoboRio/faq/pcm/
 		 * http://content.vexrobotics.com/vexpro/pdf/217-4243-PCM-Users-Guide-20141230.pdf
 		 */
-		//pneumatic_solenoid = new Solenoid(PCM_CAM_ID, 0); // This is the pneumatic object
-		//pneumatic_compressor = new Compressor(PCM_CAM_ID);
-		//pneumatic_compressor.setClosedLoopControl(true);
+		pneumatic_solenoid = new Solenoid(PCM_CAM_ID, 0); // This is the pneumatic object
+		pneumatic_compressor = new Compressor(PCM_CAM_ID);
+		pneumatic_compressor.setClosedLoopControl(true);
 
 		// Joystick init
 		/*
@@ -141,6 +150,9 @@ public class Robot extends SampleRobot {
 		
 	}
 
+	/*
+	 * Stop the robot drive system
+	 */
 	private void drive_stop(){
 		myRobot.drive(0, 0.0); 
 	}
@@ -284,11 +296,11 @@ public class Robot extends SampleRobot {
 	}
 
 	public void close_arm() {
-		//pneumatic_solenoid.set(true);
+		pneumatic_solenoid.set(true);
 	}
 
 	public void open_arm() {
-		//pneumatic_solenoid.set(false);
+		pneumatic_solenoid.set(false);
 	}
 
 	/**
@@ -302,10 +314,10 @@ public class Robot extends SampleRobot {
 			// Hold the soft touch button to force sensitive controls.
 			soft_touch_mode.set(btn_soft_mode.get());
 			if (soft_touch_mode.get() == true){
-				sensitivity = 0.8;
+				sensitivity = MIN_SENSITIVITY;
 			}
 			else {
-				sensitivity = 1.0;
+				sensitivity = MAX_SENSITIVITY;
 			}
 			
 			myRobot.arcadeDrive(sensitivity * stick.getY(), 
@@ -349,16 +361,16 @@ public class Robot extends SampleRobot {
 				
 				// Compressor diagnostics
 				// http://wpilib.screenstepslive.com/s/4485/m/13503/l/216217?data-resolve-url=true&data-manual-id=13503
-				/*SmartDashboard.putNumber("Compressor AMPS", pneumatic_compressor.getCompressorCurrent());
+				SmartDashboard.putNumber("Compressor AMPS", pneumatic_compressor.getCompressorCurrent());
 				SmartDashboard.putBoolean("CLOSED LOOP?", pneumatic_compressor.getClosedLoopControl());
 				SmartDashboard.putBoolean("Compressor Current Fault", pneumatic_compressor.getCompressorCurrentTooHighFault());
 				SmartDashboard.putBoolean("Compressor missing", pneumatic_compressor.getCompressorNotConnectedFault());
 				SmartDashboard.putBoolean("Compressor Shorted", pneumatic_compressor.getCompressorShortedFault());
 				SmartDashboard.putBoolean("Pressure switch too low", pneumatic_compressor.getPressureSwitchValue());
-				*/
-				//SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_solenoid.getPCMSolenoidVoltageFault());
-				//SmartDashboard.putNumber("Solenoid bit faults", pneumatic_solenoid.getPCMSolenoidBlackList());
-				//SmartDashboard.putNumber("Solenoid bit status", pneumatic_solenoid.getAll());
+				
+				SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_solenoid.getPCMSolenoidVoltageFault());
+				SmartDashboard.putNumber("Solenoid bit faults", pneumatic_solenoid.getPCMSolenoidBlackList());
+				SmartDashboard.putNumber("Solenoid bit status", pneumatic_solenoid.getAll());
 				
 				SmartDashboard.putNumber("Stick POV", stick.getPOV());
 				SmartDashboard.putNumber("Stick throttle", stick.getThrottle());
