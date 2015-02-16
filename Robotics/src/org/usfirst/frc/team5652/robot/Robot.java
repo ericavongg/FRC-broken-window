@@ -302,23 +302,25 @@ public class Robot extends SampleRobot {
 			};
 			
 	int pwr_index;
+	double current_power = 0;
 
 	public void forklift_up() {
 		// Tween logic
 		pwr_index = 0;
-		double current_power = 0; 
 		
-		if (System.currentTimeMillis() - tween_frk_up_last > period ) {
-			if (last_lift_state == LIFT_STATES.UP){
+		if (last_lift_state == LIFT_STATES.UP) {
+			if (System.currentTimeMillis() - tween_frk_up_last > period){
 				pwr_index++;
 				if (pwr_index >= soft_to_hard_tween.length) {
 					current_power = soft_to_hard_tween[soft_to_hard_tween.length-1];
 				}
+				tween_frk_up_last = System.currentTimeMillis();
 			}
+		} else {
+			current_power = 0; 
 		}
-		current_power = soft_to_hard_tween[pwr_index];
-		tween_frk_up_last = System.currentTimeMillis();
 		
+		current_power = soft_to_hard_tween[pwr_index];		
 		
 		if (!upperLimitSwitch.get()) {
 			motor_5.set(sensitivity * lift_power_up * current_power);
@@ -336,18 +338,20 @@ public class Robot extends SampleRobot {
 	public void forklift_down() {
 		// Tween logic
 		pwr_index = 0;
-		double current_power = 0; 
 		
-		if (System.currentTimeMillis() - tween_frk_up_last > period ) {
-			if (last_lift_state == LIFT_STATES.DOWN){
+		if (last_lift_state == LIFT_STATES.DOWN) {
+			if (System.currentTimeMillis() - tween_frk_up_last > period){
 				pwr_index++;
 				if (pwr_index >= soft_to_hard_tween.length) {
 					current_power = soft_to_hard_tween[soft_to_hard_tween.length-1];
 				}
+				tween_frk_up_last = System.currentTimeMillis();
 			}
+		} else {
+			current_power = 0; 
 		}
+		
 		current_power = soft_to_hard_tween[pwr_index];
-		tween_frk_up_last = System.currentTimeMillis();
 		
 		if (!lowerLimitSwitch.get()) {
 			motor_5.set( -1 * lift_power_down * current_power);
