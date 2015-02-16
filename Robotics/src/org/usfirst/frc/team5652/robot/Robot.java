@@ -328,8 +328,9 @@ public class Robot extends SampleRobot {
 		}
 		
 		last_lift_state = LIFT_STATES.UP;
-		// Probably need this just in case
-		//forklift_stop();
+		if (lowerLimitSwitch.get()) {
+			forklift_stop();
+		}
 	}
 
 	public void forklift_down() {
@@ -357,7 +358,9 @@ public class Robot extends SampleRobot {
 		
 		last_lift_state = LIFT_STATES.DOWN;
 		// Probably need this just in case
-		//forklift_stop();
+		if (lowerLimitSwitch.get()) {
+			forklift_stop();
+		}
 	}
 
 	public void forklift_stop() {
