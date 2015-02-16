@@ -338,7 +338,7 @@ public class Robot extends SampleRobot {
 		double current_power = 0; 
 		
 		if (System.currentTimeMillis() - tween_frk_up_last > period ) {
-			if (last_lift_state == LIFT_STATES.UP){
+			if (last_lift_state == LIFT_STATES.DOWN){
 				pwr_index++;
 				if (pwr_index >= soft_to_hard_tween.length) {
 					current_power = soft_to_hard_tween[soft_to_hard_tween.length-1];
