@@ -87,7 +87,35 @@ public class Robot extends SampleRobot {
 	private Vision vision;
 	private Thread thread;
 	private CameraServer camserver;
-
+	
+	// TWEENING variables
+	private boolean disable_tween = false;
+	private long tween_last_seen = System.currentTimeMillis();
+	
+	static private enum LIFT_STATES  {STOP, UP, DOWN};
+	private LIFT_STATES last_lift_state = LIFT_STATES.STOP;
+	
+	
+	// LOWER THIS VALUE TO MODIFY THE TWEEN SPEED
+	private double period = 200; // 200 ms * 10 = 2 seconds
+	
+	// This is the tween hash table.
+	// sin(x) is computationally expensive so 
+	// made a pseudo waveform using a hash table.
+	// Each entry is a power value for the lift motors.
+	// MODIFY/TWEAK THESE VALUES!!
+	private static double[] TWEEN_SLOW_THEN_FAST = { 
+			0.20, // 0 * n ms 
+			0.20, 
+			0.25,
+			0.35,
+			0.45,
+			0.55, 
+			0.65,
+			0.75,
+			0.90,  
+			1.00  // 10 * n ms
+			};
 	
 	public Robot() {
 		// We have 2 motors per wheel
@@ -280,47 +308,65 @@ public class Robot extends SampleRobot {
 		myRobot.drive(0.0, 0.0); // stop robot
 	}
 	
-	// TEST CODE FOR TWEENING
-	private long tween_frk_up_last = System.currentTimeMillis();
-	
-	enum LIFT_STATES  {STOP, UP, DOWN};
-	private LIFT_STATES last_lift_state = LIFT_STATES.STOP;
-	
-	double period = 200; // 100 ms 
-	// 100 ms * 10 = 1 seconds
-	double[] soft_to_hard_tween = { 
-			0.20, // 0 * n ms 
-			0.20, 
-			0.25,
-			0.35,
-			0.45,
-			0.55, 
-			0.65,
-			0.75,
-			0.90,  
-			1.00  // 10 * n ms
-			};
-			
-	int pwr_index;
-	double current_power = 0;
-
-	public void forklift_up() {
-		// Tween logic
-		pwr_index = 0;
-		
-		if (last_lift_state == LIFT_STATES.UP) {
-			if (System.currentTimeMillis() - tween_frk_up_last > period){
-				pwr_index++;
-				if (pwr_index >= soft_to_hard_tween.length) {
-					current_power = soft_to_hard_tween[soft_to_hard_tween.length-1];
-				}
-				tween_frk_up_last = System.currentTimeMillis();
-			}
-		} else {
-			current_power = 0; 
+	/*
+	 * Tween logic
+	 * 
+	 * Check if the lift states has changed.
+	 * So if the operator released the trigger, 
+	 * 		The state is reset to STOP
+	 * If the operators holds it down and the states don't change
+	 * 		Then we check if 200 ms (may change) has elapsed 
+	 * 		since the last time we checked the button state. 
+	 * 
+	 * If 200 ms has elapsed, we then go and increment the index
+	 * while ensuring the index doesn't go over 9 (the current 
+	 * array size is of 10).
+	 * 
+	 * If none of these conditions are met, we return an index of 0. 
+	 * index is returned to the caller at the end of the method.
+	 * 
+	 */
+	private int fork_lift_tween(LIFT_STATES state_to_watch) {
+		int index = 0;
+		// If tween is disabled, just set it to Max value.
+		if (disable_tween == true){
+			return TWEEN_SLOW_THEN_FAST.length - 1;
 		}
 		
-		current_power = soft_to_hard_tween[pwr_index];		
+		if (last_lift_state == state_to_watch) {
+			// tween_last_seen should be ok as a shared variable.
+			// last_lift_state should change and avoid entry here.
+			if (System.currentTimeMillis() - tween_last_seen > period){
+				index++;
+				if (index >= TWEEN_SLOW_THEN_FAST.length) {
+					index = TWEEN_SLOW_THEN_FAST.length - 1;
+				}
+				tween_last_seen = System.currentTimeMillis();
+			}
+		} 
+		
+		return index;
+	}
+
+	/*
+	 * Code to lift the fork up
+	 * 
+	 * First it checks if the limit switch is triggered,
+	 * 		If so, it won't go up anymore to protect the hardware
+	 * else
+	 * 		It will move up depending on the sensitivity mode and
+	 * 		the amount of tween'd power
+	 * At the end, it checks if it needs to stop the forklift
+	 * because it hit a limit switch.
+	 * TODO? Make it an interrupt, not a poll
+	 */
+	public void forklift_up() {
+		// Tween logic
+		int pwr_index;
+		double current_power;
+		pwr_index = fork_lift_tween(LIFT_STATES.UP);
+		
+		current_power = TWEEN_SLOW_THEN_FAST[pwr_index];		
 		
 		if (!upperLimitSwitch.get()) {
 			motor_5.set(sensitivity * lift_power_up * current_power);
@@ -335,23 +381,27 @@ public class Robot extends SampleRobot {
 		}
 	}
 
+	/*
+	 * Code to lift the fork down
+	 * 
+	 * First it checks if the limit switch is triggered,
+	 * 		If so, it won't go down anymore to protect the hardware
+	 * else
+	 * 		It will move up depending on the sensitivity mode and
+	 * 		the amount of tween'd power
+	 * 
+	 * At the end, it checks if it needs to stop the forklift
+	 * because it hit a limit switch.
+	 * 
+	 * TODO? Make it an interrupt, not a poll
+	 */
 	public void forklift_down() {
 		// Tween logic
-		pwr_index = 0;
+		int pwr_index;
+		double current_power;
+		pwr_index = fork_lift_tween(LIFT_STATES.DOWN);
 		
-		if (last_lift_state == LIFT_STATES.DOWN) {
-			if (System.currentTimeMillis() - tween_frk_up_last > period){
-				pwr_index++;
-				if (pwr_index >= soft_to_hard_tween.length) {
-					current_power = soft_to_hard_tween[soft_to_hard_tween.length-1];
-				}
-				tween_frk_up_last = System.currentTimeMillis();
-			}
-		} else {
-			current_power = 0; 
-		}
-		
-		current_power = soft_to_hard_tween[pwr_index];
+		current_power = TWEEN_SLOW_THEN_FAST[pwr_index];
 		
 		if (!lowerLimitSwitch.get()) {
 			motor_5.set( -1 * lift_power_down * current_power);
