@@ -254,6 +254,7 @@ public class Robot extends SampleRobot {
 	public void autonomous() {
 		myRobot.setSafetyEnabled(false);
 		
+		// TODO: PLEASE EDIT THE AUTONOMOUS CODE!!
 		drive_forward(0.5, 1);
 		drive_rotate_right(0.4, 0.5);
 		drive_backwards(0.5,1);
@@ -278,25 +279,85 @@ public class Robot extends SampleRobot {
 
 		myRobot.drive(0.0, 0.0); // stop robot
 	}
+	
+	// TEST CODE FOR TWEENING
+	private long tween_frk_up_last = System.currentTimeMillis();
+	
+	enum LIFT_STATES  {STOP, UP, DOWN};
+	private LIFT_STATES last_lift_state = LIFT_STATES.STOP;
+	
+	double period = 200; // 100 ms 
+	// 100 ms * 10 = 1 seconds
+	double[] soft_to_hard_tween = { 
+			0.20, // 0 * n ms 
+			0.20, 
+			0.25,
+			0.35,
+			0.45,
+			0.55, 
+			0.65,
+			0.75,
+			0.90,  
+			1.00  // 10 * n ms
+			};
+			
+	int pwr_index;
 
 	public void forklift_up() {
-		//TODO Add tweening
-		if (!upperLimitSwitch.get()) {
-			motor_5.set(sensitivity * lift_power_up);
-			motor_6.set(sensitivity * -1 * lift_power_up);
-			motor_7.set(sensitivity * lift_power_up);
-			motor_8.set(sensitivity * -1 * lift_power_up);
+		// Tween logic
+		pwr_index = 0;
+		double current_power = 0; 
+		
+		if (System.currentTimeMillis() - tween_frk_up_last > period ) {
+			if (last_lift_state == LIFT_STATES.UP){
+				pwr_index++;
+				if (pwr_index >= soft_to_hard_tween.length) {
+					current_power = soft_to_hard_tween[soft_to_hard_tween.length-1];
+				}
+			}
 		}
+		current_power = soft_to_hard_tween[pwr_index];
+		tween_frk_up_last = System.currentTimeMillis();
+		
+		
+		if (!upperLimitSwitch.get()) {
+			motor_5.set(sensitivity * lift_power_up * current_power);
+			motor_6.set(sensitivity * -1 * lift_power_up * current_power);
+			motor_7.set(sensitivity * lift_power_up * current_power);
+			motor_8.set(sensitivity * -1 * lift_power_up * current_power);
+		}
+		
+		last_lift_state = LIFT_STATES.UP;
+		// Probably need this just in case
+		//forklift_stop();
 	}
 
 	public void forklift_down() {
-		// TODO Add limit switch check to prevent hitting the sprockets.
+		// Tween logic
+		pwr_index = 0;
+		double current_power = 0; 
+		
+		if (System.currentTimeMillis() - tween_frk_up_last > period ) {
+			if (last_lift_state == LIFT_STATES.UP){
+				pwr_index++;
+				if (pwr_index >= soft_to_hard_tween.length) {
+					current_power = soft_to_hard_tween[soft_to_hard_tween.length-1];
+				}
+			}
+		}
+		current_power = soft_to_hard_tween[pwr_index];
+		tween_frk_up_last = System.currentTimeMillis();
+		
 		if (!lowerLimitSwitch.get()) {
-			motor_5.set( -1 * 	lift_power_down);
+			motor_5.set( -1 * lift_power_down * current_power);
 			motor_6.set( lift_power_down);
-			motor_7.set( -1 * 	lift_power_down);
+			motor_7.set( -1 * lift_power_down * current_power);
 			motor_8.set( lift_power_down);
 		}
+		
+		last_lift_state = LIFT_STATES.DOWN;
+		// Probably need this just in case
+		//forklift_stop();
 	}
 
 	public void forklift_stop() {
@@ -304,6 +365,7 @@ public class Robot extends SampleRobot {
 		motor_6.set(lift_power_stop);
 		motor_7.set(lift_power_stop);
 		motor_8.set(lift_power_stop);
+		last_lift_state = LIFT_STATES.STOP;
 	}
 
 	public void close_arm() {
