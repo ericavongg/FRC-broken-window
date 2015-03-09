@@ -71,7 +71,8 @@ public class Robot extends SampleRobot {
 	
 	// Pneumatics
 	static private int PCM_CAM_ID = 2;
-	private Solenoid pneumatic_solenoid;
+	private Solenoid pneumatic_valve0;
+	private Solenoid pneumatic_valve1;
 	private Compressor pneumatic_compressor;
 	
 	// Lift controls p
@@ -143,7 +144,11 @@ public class Robot extends SampleRobot {
 		 * http://khengineering.github.io/RoboRio/faq/pcm/
 		 * http://content.vexrobotics.com/vexpro/pdf/217-4243-PCM-Users-Guide-20141230.pdf
 		 */
-		pneumatic_solenoid = new Solenoid(PCM_CAM_ID, 0); // This is the pneumatic object
+		pneumatic_valve0 = new Solenoid(PCM_CAM_ID, 0); // This is the pneumatic object
+		pneumatic_valve1 = new Solenoid(PCM_CAM_ID, 1); // This is the second pneumatic valve? object?
+		
+		pneumatic_valve0.set(true); //true close
+		pneumatic_valve1.set(true); //true close - false means open 
 		pneumatic_compressor = new Compressor(PCM_CAM_ID);
 		pneumatic_compressor.setClosedLoopControl(true);
 
@@ -187,6 +192,7 @@ public class Robot extends SampleRobot {
 		// SmartDashboard defaults
 		SmartDashboard.putNumber("AUTO_DRIVE_POWER", auto_drive_power);
 		SmartDashboard.putNumber("AUTO_DRIVE_POWER", sensitivity);
+		
 	}
 
 	/*
@@ -281,6 +287,12 @@ public class Robot extends SampleRobot {
 	 */
 	public void autonomous() {
 		myRobot.setSafetyEnabled(false);
+		
+		// Open arm 
+		open_arm(); 
+		
+		// Disable arms 
+		disable_pneumaticvalves();
 		
 		// TODO: PLEASE EDIT THE AUTONOMOUS CODE!!
 		drive_forward(0.5, 1);
@@ -424,13 +436,31 @@ public class Robot extends SampleRobot {
 		motor_8.set(lift_power_stop);
 		last_lift_state = LIFT_STATES.STOP;
 	}
-
+/* 
+ * Let x be pneumatic valve 0 and let y pneumatic valve 1 be y 
+ * If x is open, y needs to be close 
+ * If x is closed, y needs to be open 
+ * open is false and true is closed (for now - remember to verify later) 
+ */
 	public void close_arm() {
-		pneumatic_solenoid.set(true);
+		pneumatic_valve0.set(true); 
+		pneumatic_valve1.set(false);
 	}
 
 	public void open_arm() {
-		pneumatic_solenoid.set(false);
+		pneumatic_valve0.set(false);
+		pneumatic_valve1.set(true);
+	}
+	
+//	Disable valve - have valves close 
+	public void disable_pneumaticvalves(){
+		pneumatic_valve0.set(true);
+		pneumatic_valve1.set(true);
+	}
+	//pneumatic flush - flush storage cylinders - useful after game 
+	public void pneumatic_flush(){
+		pneumatic_valve0.set(false);
+		pneumatic_valve1.set(false);
 	}
 	
 	private void forklift_logic() {
@@ -482,9 +512,9 @@ public class Robot extends SampleRobot {
 		SmartDashboard.putBoolean("Compressor Shorted", pneumatic_compressor.getCompressorShortedFault());
 		SmartDashboard.putBoolean("Pressure switch too low", pneumatic_compressor.getPressureSwitchValue());
 		
-		SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_solenoid.getPCMSolenoidVoltageFault());
-		SmartDashboard.putNumber("Solenoid bit faults", pneumatic_solenoid.getPCMSolenoidBlackList());
-		SmartDashboard.putNumber("Solenoid bit status", pneumatic_solenoid.getAll());
+		SmartDashboard.putBoolean("Solenoid voltage fault", pneumatic_valve0.getPCMSolenoidVoltageFault());
+		SmartDashboard.putNumber("Solenoid bit faults", pneumatic_valve0.getPCMSolenoidBlackList());
+		SmartDashboard.putNumber("Solenoid bit status", pneumatic_valve0.getAll());
 		
 		SmartDashboard.putNumber("Stick POV", stick.getPOV());
 		SmartDashboard.putNumber("Stick throttle", stick.getThrottle());
